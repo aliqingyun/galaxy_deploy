@@ -31,7 +31,7 @@ spec:
             - name: SERVICE_NAME
               value: cetus-customer-service
         - name: cetus-customer-prod
-          image: registry.cn-hangzhou.aliyuncs.com/acs/rollouts-demo:blue
+          image: 10.0.11.210/cetus-mysqldev/cetus-customer-dev:13
           imagePullPolicy: IfNotPresent
           readinessProbe:
             tcpSocket:
