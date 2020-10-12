@@ -1,26 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    k8s.eip.work/layer: web
-    k8s.eip.work/name: cetus-customer-prod
   name: cetus-customer-prod
+  labels:
+    app: cetus-customer-prod
 spec:
-  progressDeadlineSeconds: 600
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      k8s.eip.work/layer: web
-      k8s.eip.work/name: cetus-customer-prod
+  minReadySeconds: 5
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
   strategy:
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+      maxUnavailable: 1
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: cetus-customer-prod
   template:
     metadata:
       labels:
+        app: cetus-customer-prod
     spec:
       containers:
         - env:
@@ -32,15 +30,14 @@ spec:
               value: mysqlstg
             - name: SERVICE_NAME
               value: cetus-customer-service
-          image: '10.0.11.210/cetus-mysqldev/cetus-customer-dev:13'
-          imagePullPolicy: Always
-          name: cetus-customer-prod
-      dnsPolicy: ClusterFirst
-      imagePullSecrets:
-        - name: 210registry
-      restartPolicy: Always
-      terminationGracePeriodSeconds: 30
-
+        - name: cetus-customer-prod
+          image: registry.cn-hangzhou.aliyuncs.com/acs/rollouts-demo:blue
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
 
 ---
 
@@ -49,10 +46,9 @@ kind: Service
 metadata:
   name: cetus-customer-prod
 spec:
-  ports:
-    - port: 8193
-      protocol: TCP
-      targetPort: 8193
   selector:
-    k8s.eip.work/layer: web
-    k8s.eip.work/name: cetus-customer-prod
+    app: cetus-customer-prod
+  ports:
+    - protocol: TCP
+      port: 8193
+      targetPort: 8193
